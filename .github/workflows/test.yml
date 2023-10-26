@@ -1,0 +1,16 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  http3-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Start containers and test http/3 integration
+        run: docker-compose -f "docker-compose.yml" up --exit-code-from test --abort-on-container-exit

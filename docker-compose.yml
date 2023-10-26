@@ -1,0 +1,45 @@
+version: "3.3"
+
+services:
+  traefik:
+    image: "traefik:v3.0.0-beta4"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/traefik_dynamic_conf.yml"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http3=true"
+    ports:
+      - "80:80"
+      # support traditional http/1 and http/2 via the tcp protocol (tcp is the default when omitted)
+      - "443:443/tcp" # this is identical to "443:443", but we want to be explicit here to avoid confusion
+      # http/3 runs over udp, so we need to expose it as well
+      - "443:443/udp"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./traefik_dynamic_conf.yml:/traefik_dynamic_conf.yml"
+      - "./whoami.localhost.pem:/whoami.localhost.pem"
+      - "./whoami.localhost-key.pem:/whoami.localhost-key.pem"
+
+  whoami:
+    image: "traefik/whoami"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls=true"
+
+  # this tests if traefik is able to serve http/3 requests
+  test:
+    depends_on:
+      - traefik
+      - whoami
+    image: "ymuski/curl-http3"
+    # sleep 3 seconds to give traefik and the whoami service some time to start up
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "sleep 3 && curl --http3-only --head --insecure --fail -H 'Host: whoami.localhost' https://traefik"
+
+
