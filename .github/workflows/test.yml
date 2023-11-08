@@ -13,4 +13,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Start containers and test http/3 integration
-        run: docker-compose -f "docker-compose.yml" up --exit-code-from test --abort-on-container-exit
+        run: docker-compose -f "docker-compose.yml" up -d
+
+      - name: Test http/3
+        # use curl with --http3-only to verify http/3,
+        # --head is used so that HTTP/3 will be explicitly written to the console,
+        # --retry 3 --retry-all-errors --fail is used to retry the request 3 times in case of failure (which includes 404 errors, e.g. when the docker-compose environment is not yet ready)
+        # see also https://www.putzisan.com/articles/validating-http3-local-site#method-3-verification-using-curl
+        run: docker run --network="host" ymuski/curl-http3 curl --insecure --head --http3-only --retry 3 --retry-all-errors --fail https://whoami.localhost
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down
