@@ -2,3 +2,17 @@ tls:
   certificates:
     - certFile: /whoami.localhost.pem
       keyFile: /whoami.localhost-key.pem
+
+http:
+  routers:
+    whoamiRouter:
+      rule: "Host(`whoami.localhost`)"
+      service: whoamiService
+      tls: true
+      entrypoints:
+        - websecure
+  services:
+    whoamiService:
+      loadBalancer:
+        servers:
+          - url: http://whoami:80
