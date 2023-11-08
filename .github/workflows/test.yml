@@ -12,10 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Start containers and test http/3 integration
+      - name: Start containers
         run: docker-compose -f "docker-compose.yml" up -d
 
-      - name: Test http/3
+      - name: Test HTTP/3
         # use curl with --http3-only to verify http/3,
         # --head is used so that HTTP/3 will be explicitly written to the console,
         # --retry 3 --retry-all-errors --fail is used to retry the request 3 times in case of failure (which includes 404 errors, e.g. when the docker-compose environment is not yet ready)
