@@ -36,10 +36,8 @@ services:
       - traefik
       - whoami
     image: "ymuski/curl-http3"
-    # sleep 3 seconds to give traefik and the whoami service some time to start up
-    command:
-      - "/bin/sh"
-      - "-c"
-      - "sleep 3 && curl --http3-only --head --insecure --fail -H 'Host: whoami.localhost' https://traefik"
+    network_mode: "host"
+    # retry 3 times, since traefik needs some time to start up
+    command: "curl --retry 3 --retry-all-errors --http3-only --insecure --head --fail https://whoami.localhost"
 
 
